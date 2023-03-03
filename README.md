@@ -1,2 +1,2 @@
 # info-grabber-py
-This is a discord token grabber made in python by burak
+This is a discord info grabber made in python by burak
